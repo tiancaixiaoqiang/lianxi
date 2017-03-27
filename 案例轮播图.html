@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            border: 0;
+        }
+
+        .all {
+            width: 500px;
+            height: 200px;
+            padding: 7px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            position: relative;
+        }
+
+        .screen {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen li {
+            width: 500px;
+            height: 200px;
+            overflow: hidden;
+            float: left;
+        }
+
+        .screen ul {
+            position: absolute;
+            left: 0;
+            top: 0px;
+            width: 3000px;
+        }
+
+        .all ol {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            line-height: 20px;
+            text-align: center;
+        }
+
+        .all ol li {
+            float: left;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .all ol li.current {
+            background: #DB192A;
+        }
+
+        #arr {
+            display: none;
+        }
+
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            margin-top: -20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-family: '黑体';
+            font-size: 30px;
+            color: #fff;
+            opacity: 0.3;
+            border: 1px solid #fff;
+        }
+
+        #arr #right {
+            right: 5px;
+            left: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="all" id='box'>
+    <div class="screen">
+        <ul>
+            <li><img src="images/1.jpg" width="500" height="200"/></li>
+            <li><img src="images/2.jpg" width="500" height="200"/></li>
+            <li><img src="images/3.jpg" width="500" height="200"/></li>
+            <li><img src="images/4.jpg" width="500" height="200"/></li>
+            <li><img src="images/5.jpg" width="500" height="200"/></li>
+        </ul>
+        <ol>
+        </ol>
+    </div>
+    <div id="arr"><span id="left">&lt;</span><span id="right">&gt;</span></div>
+</div>
+<script src="js/common.js"></script>
+<script>
+    //先获取最外面的box
+    var box=my$("box");
+    //获取类样式为screen的div
+    var screen=box.children[0];
+    //获取screen的宽度
+    var imgWidth=screen.offsetWidth;
+    //获取ul
+    var ul=screen.children[0];
+    //获取ul中的所有li
+    var lis=ul.children;
+    //获取ol
+    var ol=screen.children[1];
+    //获取左右焦点的div
+    var arr=my$("arr");
+
+    //设置一个变量-----解决坑的问题=================================
+    var pic=0;
+    //页面加载后先根据ul中li的个数创建li存放到ol中
+    for(var i=0;i<lis.length;i++){
+        //创建li标签
+        var liObj=document.createElement("li");
+        liObj.innerHTML=(i+1);
+        liObj.setAttribute("index",i);
+        ol.appendChild(liObj);
+        //为每个li添加鼠标进入的事件
+        liObj.onmouseover=function () {
+            //#DB192A
+            //获取ol中的所有的li的个数
+            for(var j=0;j<ol.children.length;j++){
+                var list=ol.children[j];
+                list.removeAttribute("class");
+            }
+            this.className="current";//让当前鼠标进入的li有背景颜色
+            //获取index属性的值
+           //index属性的值在pic中
+            pic=parseInt(this.getAttribute("index"));
+            animate(ul,-pic*imgWidth);
+        };
+    }
+    //页面加载后让ol中的第一个li有默认的类样式(背景颜色)
+    ol.children[0].className="current";
+    //克隆ul中的第一个li,追加到ul中最后
+    ul.appendChild(ul.children[0].cloneNode(true));
+    //为了无缝连接-----=======按钮的个数和图片的个数不一致===========
+    var setId=setInterval(clickHandle,1000);
+    //为box注册鼠标进入和离开的事件
+    box.onmouseover=function () {//鼠标进入
+        arr.style.display="block";
+        clearInterval(setId);
+    };
+    box.onmouseout=function () {//鼠标离开
+        arr.style.display="none";
+        setId=setInterval(clickHandle,1000);
+    };
+    //为左右按钮注册点击事件
+    my$("right").onclick=clickHandle;
+    function clickHandle() {
+        //此时的pic最小值0,最大值是
+        //如果想要把第六张图片显示出来,pic的值应该为5
+        //本来pic的值和ol中的li的index值相应的,但是由于相加,pic的值就超过了4,可以等于5,但是此时pic的值为5和ul中的li的索引一致,和ol中的li索引不一致;
+        //ul中的li的个数
+        console.log(lis.length);
+        if(pic==lis.length-1){
+            pic=0;
+            ul.style.left=0+"px";
+        }
+        pic++;
+        animate(ul,-pic*imgWidth);
+        if(pic==lis.length-1){
+            //只要pic的值为5的时候,显示的是第六张图片(用户看到的是第一张)
+            ol.children[0].className="current";
+            //移除第五个按钮的背景颜色
+            ol.children[ol.children.length-1].className="";
+        }else{
+            //排他
+            for(var i=0;i<ol.children.length;i++){
+                ol.children[i].removeAttribute("class");
+            }
+            //pic对应ol中li索引的这个li有类样式
+            ol.children[pic].className="current";
+        }
+    };
+    //左边按钮
+    my$("left").onclick=function () {
+        if(pic==0){
+            pic=lis.length-1;
+            ul.style.left=-pic*imgWidth+"px";
+        }
+        pic--;
+        animate(ul,-pic*imgWidth);
+        //排他
+        for(var i=0;i<ol.children.length;i++){
+            ol.children[i].removeAttribute("class");
+        }
+        //pic对应ol中li索引的这个li有类样式
+        ol.children[pic].className="current";
+    };
+</script>
+<script>
+//    //获取所有需要的元素
+//    //先获取box
+//    var box=my$("box");
+//    //获取显示图片宽度的div
+//    var screen=box.children[0];
+//    //获取图片移动的宽度
+//    var imgWidth=screen.offsetWidth;
+//    //获取ul
+//    var ul=screen.children[0];
+//    //获取ul中的所有的li
+//    var lis=ul.children;
+//    //获取ol
+//    var ol=screen.children[1];
+//    //获取左右焦点的div
+//    var arr=my$("arr");
+//    //获取左边的按钮
+//    var left=my$("left");
+//    //获取右边的按钮
+//    var right=my$("right");
+//    var pic=0;//=======================================为了同步
+//    //创建小按钮,的个数和ul中li的个数一致
+//    for(var i=0;i<lis.length;i++){
+//        //创建li,并加入到ol中
+//        var li=document.createElement("li");
+//        li.innerHTML=(i+1);
+//        li.setAttribute("index",i);
+//        ol.appendChild(li);
+//        //鼠标进入到当前的li中,当前的li有类样式,其他的移除类样式
+//        li.onmouseover=function () {
+//            //排他
+//            for(var j=0;j<ol.children.length;j++){
+//                ol.children[j].removeAttribute("class");
+//            }
+//            this.className="current";
+//            //获取索引
+//            var index=parseInt(this.getAttribute("index"));
+//            animate(ul,-index*imgWidth);
+//            //坑========================
+//            pic=parseInt(this.getAttribute("index"));
+//        };
+//    }
+//    //设置ol中第一个li有默认的背景颜色
+//    ol.children[0].className="current";
+//    //为ul中再追加一个li,这个li中显示的图片和ul中的第一个li中的图片一致
+//    ul.appendChild(ul.children[0].cloneNode(true));
+//    var setId=null;//为了鼠标进入到box中的时候清理计时器
+//    setId=setInterval(f1,1000);//自动播放
+//    //为box注册鼠标进入和离开的事件
+//    box.onmouseover=function () {
+//        arr.style.display="block";
+//        clearInterval(setId);
+//    };
+//    box.onmouseout=function () {
+//        arr.style.display="none";
+//        setId=setInterval(f1,1000);
+//    };
+//    //鼠标点击左右焦点按钮,移动图片
+//    right.onclick=f1;
+//    function f1() {
+//        if(pic==lis.length-1){
+//            pic=0;
+//            ul.style.left=0+"px";
+//        }
+//        pic++;
+//        animate(ul,-pic*imgWidth);
+//        if(pic==lis.length-1){
+//            //第一个按钮有颜色
+//            ol.children[0].className="current";
+//            //最后一个按钮颜色移除
+//            ol.children[ol.children.length-1].removeAttribute("class");
+//        }else{
+//            //排他功能
+//            for(var i=0;i<ol.children.length;i++){
+//                ol.children[i].removeAttribute("class");
+//            }
+//            //让点击按钮的时候里面对应的pic对应的按钮有背景颜色
+//            ol.children[pic].className="current";
+//        }
+//    };
+//    left.onclick=function () {
+//        if(pic==0){
+//            pic=lis.length-1;
+//            ul.style.left=-pic*imgWidth+"px";
+//        }
+//        pic--;
+//        animate(ul,-pic*imgWidth);
+//        for(var i=0;i<ol.children.length;i++){
+//            ol.children[i].removeAttribute("class");
+//        }
+//        ol.children[pic].className="current";
+//    };
+
+
+</script>
+
+</body>
+</html>
